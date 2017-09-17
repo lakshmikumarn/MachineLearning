@@ -45,7 +45,7 @@ testing <- trainD[-inTrain,]
 
 <b> 2. Cleanup Data: </b>
 
-With 160 fields in the dataset, let us eliminate that are non-predictors or have high correlation. NA cleanup step is not needed when the predictability of the out-of-sample data will be impacted as the out-of-sample has many columns that are have NAs.
+With 160 fields in the dataset, let us eliminate that are non-predictors or have high correlation. Typically, NA cleanup step is not needed when the predictability of the out-of-sample data will be impacted as the out-of-sample has many columns that are have NAs.
 It is important that whatever structural change we do part of the columns/features cleanp we have to apply across the data sets including the validation data set.
 
 ```
@@ -54,7 +54,7 @@ training <- training[,-trainNZV]
 testing <- testing[,-trainNZV]
 validation <- validationD[,-trainNZV]
 
-## I built the model w/o removing NAs. Keeping the code still commented to run various scenarios
+## I built the model with and w/o removing NAs. Keeping the code still commented to run various scenarios
 # naColumns <- sapply(names(training), function(x) all(is.na(training[,x]) == TRUE))
 # training <- training[, naColumns==FALSE]
 # testing <- testing[, naColumns==FALSE]
@@ -96,9 +96,7 @@ print(pred_oos)
 
 <h2> Conclusion: </h2>
 
-This concludes the modeling and prediction of the data sets given. I tried to do modeling with and without cleaning NA values. Because validation data columns have NAs for many columns, doing the modeling on training data w/o NA removal gave a better accuracy results but the differences were not significant. So went ahead with out removing NA.
-
-The output of the prediction is as below:
+This concludes the modeling and prediction of the data sets given. I tried to do modeling with and without cleaning NA values. Because validation data columns have NAs for many columns, doing the modeling on training data w/o NA removal. The outcome of the prediction for the above code is as below
 
 [1] B A B A A E D B A A B C B A E E A B B B
 
