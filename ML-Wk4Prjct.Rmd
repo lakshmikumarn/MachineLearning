@@ -1,0 +1,107 @@
+---
+title: "Machine Learning - Project Writeup"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<h2> Background: </h2>
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These types of devices are part of the quantified self-movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+<h2> Goal: </h2> 
+To build a model to predict the way the exercise was performed which is given in the outcome variable/column “classe” in the data set
+
+<h2> High Level Approach: </h2>
+Partition & sub-split the training data (pml-training.csv) into training and testing to build a model, cross-validate using the testing data (part of training dataset), identify a better classifier to build model, evaluate the need to stack or aggregate multiple models to improve the accuracy and finally, predict using the model with better accuracy factor / with less sample errors over the testing sample (remember we are still in the training data set). 
+
+Then, use the model to validate against the out-of-sample data created from (pml-testing.csv). We will name with a variable name - the former training and latter validation.
+
+
+<h2> Detailed Steps: </h2>
+
+
+<b> 1. Load and partition data: </b>
+
+Training data is loaded from pml-training.csv and partitioned. Validation data is loaded from pml-testing.csv </b>
+
+```{library(caret)
+relUrlT <- "~/coursera/datascience/MachineLearning/Week4/pml-training.csv"
+relUrlE <- "~/coursera/datascience/MachineLearning/Week4/pml-testing.csv"
+
+trainD <- read.csv(relUrlT,header = TRUE)
+
+## Validation data to be used for out-of-sample validation (typically called testing)
+validationD <- read.csv(relUrlE, header = TRUE)
+
+## Create training and testing data partition from from the "training file"
+set.seed(12345)
+inTrain <- createDataPartition(y=trainD$classe, p=0.7, list = FALSE)
+training <- trainD[inTrain,]
+testing <- trainD[-inTrain,]
+
+```
+
+<b> 2. Cleanup Data: </b>
+
+With 160 fields in the dataset, let us eliminate that are non-predictors or have high correlation. NA cleanup step is not needed when the predictability of the out-of-sample data will be impacted as the out-of-sample has many columns that are have NAs.
+It is important that whatever structural change we do part of the columns/features cleanp we have to apply across the data sets including the validation data set.
+
+```
+trainNZV <- nearZeroVar(training)
+training <- training[,-trainNZV]
+testing <- testing[,-trainNZV]
+validation <- validationD[,-trainNZV]
+
+## I built the model w/o removing NAs. Keeping the code still commented to run various scenarios
+# naColumns <- sapply(names(training), function(x) all(is.na(training[,x]) == TRUE))
+# training <- training[, naColumns==FALSE]
+# testing <- testing[, naColumns==FALSE]
+# validation <- validation[,naColumns == FALSE]
+
+```
+<b> 3. Build Model & use Cross-Validation: </b>
+
+Using the training data pruned, let us build models with classe as the outcome and all other pruned attributes as predictors. We are choosing tree classifiers, random forests and gradient boosting to either stack or compare the model accuracy results and choose the model with best accuracy to use it for out-of-sample validation. While building the model, to tune the sampling,  trainControl paramater is set with "K-fold cross-validation".
+
+```
+ctrl <- trainControl(method="cv", number=3, verboseIter=FALSE) ## create control object to do cross-validation
+modelFit_rpart <- train(classe ~ ., method = "rpart", data = na.exclude(training), trControl = ctrl)
+modelFit_rf <- train(classe ~ ., method = "rf", data = na.exclude(training), prox=TRUE, trControl = ctrl)
+modelFit_gbm <- train(classe ~ ., method = "gbm", data = na.exclude(training), verbose= FALSE , trControl = ctrl)
+
+# Predict using the models built on the testing data subset created out of the training data file
+pred_rpart <- predict(modelFit_rpart,newdata = na.exclude(testing))
+pred_rf <- predict(modelFit_rf,newdata = na.exclude(testing))
+pred_gbm <- predict(modelFit_gbm,newdata = na.exclude(testing))
+
+# Check the accuracy results of these models to select a model to predict validation data
+
+print(mean(modelFit_gbm$results$Accuracy))  # [1] 0.9983897
+print(mean(modelFit_rpart$results$Accuracy)) #  [1] 0.6065754
+print(mean(modelFit_rf$results$Accuracy)) #  [1] 0.9365079
+```
+
+<b>4: Predict Out-of-Sample Data:  </b>
+
+Based on the average accuracy results (0.9983897) above, '_gbm"" based modeling yields a better accuracy results. Hence, I  chose gbm model to take it up for out-of-sample validation. Let us evaluate the 'validation' data (out-of-sample) and print the prediction. I eliminated the last column which is of no interest in this context.
+
+
+```
+# using gradient boosting model (having higher accuracy results given the sampling)
+pred_oos <- predict(modelFit_gbm,newdata = na.exclude(validation[, -ncol(validation)]))
+print(pred_oos)
+```
+
+<h2> Conclusion: </h2>
+
+This concludes the modeling and prediction of the data sets given. I tried to do modeling with and without cleaning NA values. Because validation data columns have NAs for many columns, doing the modeling on training data w/o NA removal gave a better accuracy results but the differences were not significant. So went ahead with out removing NA.
+
+The output of the prediction is as below:
+
+[1] B A B A A E D B A A B C B A E E A B B B
+
+Levels: A B C D E
+
+
