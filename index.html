@@ -88,7 +88,7 @@ img {
 .tabbed-pane {
   padding-top: 12px;
 }
-button.code-folding-btn:focus {
+button.code-folding-btn:focus { 
   outline: none;
 }
 </style>
@@ -153,7 +153,7 @@ training &lt;- trainD[inTrain,]
 testing &lt;- trainD[-inTrain,]
 </code></pre>
 <p><b> 2. Cleanup Data: </b></p>
-<p>With 160 fields in the dataset, let us eliminate that are non-predictors or have high correlation. NA cleanup step is not needed when the predictability of the out-of-sample data will be impacted as the out-of-sample has many columns that are have NAs. It is important that whatever structural change we do part of the columns/features cleanp we have to apply across the data sets including the validation data set.</p>
+<p>With 160 fields in the dataset, let us eliminate that are non-predictors or have high correlation. Typically, NA cleanup step is not needed when the predictability of the out-of-sample data will be impacted as the out-of-sample has many columns that are have NAs. It is important that whatever structural change we do part of the columns/features cleanp we have to apply across the data sets including the validation data set.</p>
 <pre><code>trainNZV &lt;- nearZeroVar(training)
 training &lt;- training[,-trainNZV]
 testing &lt;- testing[,-trainNZV]
@@ -190,8 +190,9 @@ print(pred_oos)</code></pre>
 <h2>
 Conclusion:
 </h2>
-<p>This concludes the modeling and prediction of the data sets given. I tried to do modeling with and without cleaning NA values. Because validation data columns have NAs for many columns, doing the modeling on training data w/o NA removal gave a better accuracy results but the differences were not significant. So went ahead with out removing NA.</p>
-<p>The output of the prediction is as below:</p>
+<p>
+  This concludes the modeling and prediction of the data sets given. I tried to do modeling with and without cleaning NA values. Because validation data columns have NAs for many columns, doing the modeling on training data w/o NA removal. The outcome of the prediction for the above code is as below
+</p>
 <p>[1] B A B A A E D B A A B C B A E E A B B B</p>
 <p>Levels: A B C D E</p>
 
